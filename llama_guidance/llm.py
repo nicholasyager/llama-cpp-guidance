@@ -39,12 +39,21 @@ class LlamaCpp(LLM):
         n_ctx: int = 1024,
         n_threads: Optional[int] = None,
         n_gpu_layers: int = 0,
+        role_start_tag="<|im_start|>",
+        role_end_tag="<|im_end|>",
+        chat_mode=False,
+        seed: Optional[int] = None,
     ):
         super().__init__()
         self.llm_name = "llama-cpp"
         self.model_path = model_path
         self.model_name = os.path.basename(model_path)
+        self.role_start_tag = role_start_tag
+        self.role_end_tag = role_end_tag
+        self.chat_mode = chat_mode
+
         logger.debug(f"Instantiating LlamaCpp ({model_path})")
+
         self.llm = Llama(
             model_path=str(model_path),
             n_threads=n_threads,
@@ -52,6 +61,7 @@ class LlamaCpp(LLM):
             n_ctx=n_ctx,
             logits_all=True,
             verbose=False,
+            seed=seed,
         )
         logger.debug("Llama instantiated")
         self._tokenizer = LlamaCppTokenizer(self.llm)
@@ -89,6 +99,19 @@ class LlamaCpp(LLM):
         ids = self.encode(text, add_bos=False)
 
         return ids[-1]
+
+    def role_start(self, role_name, **kwargs):
+        assert self.chat_mode, "role_start() can only be used in chat mode"
+        return (
+            self.role_start_tag
+            + role_name
+            + "".join([f' {k}="{v}"' for k, v in kwargs.items()])
+            + "\n"
+        )
+
+    def role_end(self, role=None):
+        assert self.chat_mode, "role_end() can only be used in chat mode"
+        return self.role_end_tag
 
     def end_of_text(self):
         return "[end of text]"
