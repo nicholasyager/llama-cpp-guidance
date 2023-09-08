@@ -8,6 +8,8 @@ from llama_cpp import Llama, StoppingCriteriaList
 import llama_cpp
 from loguru import logger
 
+logger.disable("llama_cpp_guidance")
+
 
 class LlamaCppTokenizer:
     def __init__(self, llm) -> None:
@@ -47,7 +49,7 @@ class LlamaCpp(LLM):
         role_start_tag="<|im_start|>",
         role_end_tag="<|im_end|>",
         chat_mode=False,
-        seed: Optional[int] = None,
+        seed: int = 0,
     ):
         super().__init__()
         self.llm_name = "llama-cpp"

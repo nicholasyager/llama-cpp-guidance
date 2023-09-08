@@ -1,6 +1,6 @@
 from pathlib import Path
 import guidance
-from llama_guidance.llm import LlamaCpp
+from llama_cpp_guidance.llm import LlamaCpp
 import random
 
 # set the default language model used to execute guidance programs
