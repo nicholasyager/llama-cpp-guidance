@@ -2,7 +2,7 @@
 
 [![pypi version shield](https://img.shields.io/pypi/v/llama-cpp-guidance)](https://img.shields.io/pypi/v/llama-cpp-guidance)
 
-The `llama-cpp-guidance` package provides an LLM client compatibility layer between `llama-cpp-python` and `guidance`.
+The `llama-cpp-guidance` package provides an LLM client compatibility layer between [llama-cpp-python] and [guidance].
 
 ## Installation
 
@@ -11,6 +11,9 @@ The `llama-cpp-guidance` package can be installed using pip.
 ```console
 pip install llama-cpp-guidance
 ```
+
+> [!INFO]
+> It is highly recommended that you follow the installation instructions for [llama-cpp-python] after installing `llama-cpp-guidance` to ensure that you have hardware acceleration setup appropriately.
 
 ## Basic Usage
 
@@ -37,3 +40,6 @@ print(output)
 ```console
 The best thing about the beach is that there’s always something to do.
 ```
+
+[llama-cpp-python]: https://github.com/abetlen/llama-cpp-python/
+[guidance]: https://github.com/guidance-ai/guidance/
