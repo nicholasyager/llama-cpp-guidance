@@ -1,15 +1,15 @@
 # llama.cpp Guidance
 
-[![pypi version shield](https://img.shields.io/pypi/v/llama_cpp_guidance)](https://img.shields.io/pypi/v/llama_cpp_guidance)
+[![pypi version shield](https://img.shields.io/pypi/v/llama-cpp-guidance)](https://img.shields.io/pypi/v/llama-cpp-guidance)
 
-The `llama_cpp_guidance` package provides an LLM client compatibility layer between `llama_cpp_python` and `guidance`.
+The `llama-cpp-guidance` package provides an LLM client compatibility layer between `llama-cpp-python` and `guidance`.
 
 ## Installation
 
-The `llama_cpp_guidance` package can be installed using pip.
+The `llama-cpp-guidance` package can be installed using pip.
 
 ```console
-pip install llama_cpp_guidance
+pip install llama-cpp-guidance
 ```
 
 ## Basic Usage

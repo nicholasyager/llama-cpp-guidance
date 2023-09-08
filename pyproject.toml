@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "llama-cpp-guidance"
 version = "0.1.0"
-description = "A guidance compatibility layer for llama_cpp_python"
+description = "A guidance compatibility layer for llama-cpp-python"
 authors = ["Nicholas Yager <yager@nicholasyager.com>"]
 readme = "README.md"
 packages = [{ include = "llama_cpp_guidance" }]
