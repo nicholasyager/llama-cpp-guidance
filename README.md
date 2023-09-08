@@ -12,8 +12,7 @@ The `llama-cpp-guidance` package can be installed using pip.
 pip install llama-cpp-guidance
 ```
 
-> [!INFO]
-> It is highly recommended that you follow the installation instructions for [llama-cpp-python] after installing `llama-cpp-guidance` to ensure that you have hardware acceleration setup appropriately.
+⚠️ It is highly recommended that you follow the installation instructions for [llama-cpp-python] after installing `llama-cpp-guidance` to ensure that you have hardware acceleration setup appropriately.
 
 ## Basic Usage
 
