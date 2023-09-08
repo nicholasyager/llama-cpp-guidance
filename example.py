@@ -5,14 +5,15 @@ import random
 
 # set the default language model used to execute guidance programs
 guidance.llm = LlamaCpp(
-    model_path=Path("../../llm/models/gguf/llama-2-13b.Q4_K_M.gguf"),
+    model_path=Path("../../llm/models/gguf/pygmalion-2-13b.Q4_K_M.gguf"),
     n_gpu_layers=1,
     n_threads=8,
     seed=random.randint(0, 1000000),
 )
 
 # we can use the {{gen}} command to generate text from the language model
-# note that we used a ~ at the start of the command tag to remove the whitespace before it (just like in Handlebars)
+# note that we used a ~ at the start of the command tag to remove the whitespace before
+#  it (just like in Handlebars)
 
 # we can pre-define valid option sets
 valid_weapons = ["sword", "axe", "mace", "spear", "bow", "crossbow"]
@@ -41,7 +42,7 @@ program = guidance(
     "description": "{{description}}",
     "name": "{{ name }}",
     "age": {{gen 'age' pattern='[0-9]+' stop=','}},
-    "armor": "{{select 'armor' options=valid_armor}}",
+    "armor": "{{select 'armor' logprobs='logprobs' options=valid_armor}}",
     "weapon": "{{select 'weapon' options=valid_weapons}}",
     "class": "{{gen 'class' stop='"'}}",
     "mantra": "{{gen 'mantra' temperature=0.8 stop='"'}}",
@@ -55,7 +56,7 @@ program = guidance(
 
 # execute the prompt
 output = program(
-    description="A quick and nimble fighter that murdered a lich",
+    description="A quick and nimble rouge that murdered a lich using a crossbow",
     valid_weapons=valid_weapons,
     valid_armor=valid_armor,
     name=name_output["first_name"] + " " + name_output["last_name"],

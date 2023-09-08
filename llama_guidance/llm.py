@@ -15,10 +15,15 @@ class LlamaCppTokenizer:
         self.cache = {}
 
     def encode(self, string: str, **kwargs) -> List[int]:
+        logger.debug("Encoding string: {string}", string=string)
         if string in self.cache:
+            logger.debug(
+                "Cache hit `{string}` => `{token}`",
+                string=string,
+                token=self.cache[string],
+            )
             return self.cache[string]
 
-        logger.debug("Encoding string: {string}", string=string)
         tokens = self.llm.tokenize(string.encode("utf-8"), **kwargs)
 
         self.cache[string] = tokens
@@ -75,9 +80,15 @@ class LlamaCpp(LLM):
             raise NotImplementedError
 
     def __call__(self, *args, **kwargs):
-        output = self.llm(*args, **kwargs)
-
         logger.debug("Invoking LlamaCpp ({args}) ({kwargs})", args=args, kwargs=kwargs)
+        output = self.llm(*args, **kwargs)
+        logger.debug(
+            "LlamaCpp generated text: {text} ({choices})",
+            text=output["choices"][0]["text"],
+            choices=[
+                (choice["text"], choice["logprobs"]) for choice in output["choices"]
+            ],
+        )
 
         for choice in output.get("choices", []):
             logprobs = choice.get("logprobs")
