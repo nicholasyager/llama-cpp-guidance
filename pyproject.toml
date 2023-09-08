@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "llama-cpp-guidance"
-version = "0.1.0"
+version = "0.1.1"
 description = "A guidance compatibility layer for llama-cpp-python"
 authors = ["Nicholas Yager <yager@nicholasyager.com>"]
 readme = "README.md"
 packages = [{ include = "llama_cpp_guidance" }]
 
 [tool.commitizen]
-version = "0.1.0"
+version = "0.1.1"
 version_files = ["pyproject.toml:^version"]
 
 [tool.poetry.dependencies]
