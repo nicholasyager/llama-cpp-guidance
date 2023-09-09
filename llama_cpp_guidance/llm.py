@@ -51,7 +51,7 @@ class LlamaCpp(LLM):
         chat_mode=False,
         seed: int = 0,
         role_to_name: Dict[str, str] = {},
-        **llama_kwargs: Dict[str, Any] = {}
+        **llama_kwargs: Dict[str, Any]
     ):
         super().__init__()
         self.llm_name = "llama-cpp"
