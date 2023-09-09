@@ -60,6 +60,7 @@ class LlamaCpp(LLM):
         self.role_start_tag = role_start_tag
         self.role_end_tag = role_end_tag
         self.chat_mode = chat_mode
+        self.role_to_name = role_to_name
 
         logger.debug(f"Instantiating LlamaCpp ({model_path})")
 
