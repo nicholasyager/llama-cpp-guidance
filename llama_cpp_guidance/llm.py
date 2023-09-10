@@ -94,28 +94,27 @@ class LlamaCpp(LLM):
                     (choice["text"], choice["logprobs"]) for choice in output["choices"]
                 ],
             )
-    
+
             for choice in output.get("choices", []):
                 logprobs = choice.get("logprobs")
-    
+
                 if not logprobs:
                     continue
-    
+
                 new_top_logprobs = []
                 for index, top_logprobs in enumerate(logprobs["top_logprobs"]):
                     if top_logprobs is None:
                         top_logprobs = {choice["logprobs"]["tokens"][index]: -0.1}
-    
+
                     new_top_logprobs.append(top_logprobs)
                 logprobs["top_logprobs"] = new_top_logprobs
-    
+
             yield output
 
     def token_to_id(self, text):
         ids = self.encode(text, add_bos=False)
 
         return ids[-1]
-    
     def role_start(self, role_name, **kwargs):
         assert self.chat_mode, "role_start() can only be used in chat mode"
         return (
