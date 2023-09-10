@@ -86,8 +86,13 @@ class LlamaCpp(LLM):
             raise NotImplementedError
 
     def __call__(self, *args, **kwargs):
-        logger.debug("Invoking LlamaCpp ({args}) ({kwargs})", args=args, kwargs=kwargs)
-        for output in self.llm(*args, **kwargs):
+        print("Invoking LlamaCpp ({args}) ({kwargs})", args, kwargs)
+
+        llm_out = self.llm(*args, **kwargs)
+        if isinstance(llm_out, dict):
+            llm_out = [llm_out]
+        
+        for output in llm_out:
             logger.debug(
                 "LlamaCpp generated text: {text} ({choices})",
                 text=output["choices"][0]["text"],
