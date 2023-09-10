@@ -72,6 +72,7 @@ class LlamaCpp(LLM):
             logits_all=True,
             verbose=False,
             seed=seed,
+            **llama_kwargs
         )
         logger.debug("Llama instantiated")
         self._tokenizer = LlamaCppTokenizer(self.llm)
