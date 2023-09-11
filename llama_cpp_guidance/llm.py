@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union, Any
 from guidance.llms import LLM, LLMSession
 
 from llama_cpp import Llama, StoppingCriteriaList
@@ -50,6 +50,8 @@ class LlamaCpp(LLM):
         role_end_tag="<|im_end|>",
         chat_mode=False,
         seed: int = 0,
+        role_to_name: Dict[str, str] = {},
+        **llama_kwargs: Dict[str, Any]
     ):
         super().__init__()
         self.llm_name = "llama-cpp"
@@ -58,6 +60,7 @@ class LlamaCpp(LLM):
         self.role_start_tag = role_start_tag
         self.role_end_tag = role_end_tag
         self.chat_mode = chat_mode
+        self.role_to_name = role_to_name
 
         logger.debug(f"Instantiating LlamaCpp ({model_path})")
 
@@ -69,6 +72,7 @@ class LlamaCpp(LLM):
             logits_all=True,
             verbose=False,
             seed=seed,
+            **llama_kwargs
         )
         logger.debug("Llama instantiated")
         self._tokenizer = LlamaCppTokenizer(self.llm)
@@ -82,42 +86,46 @@ class LlamaCpp(LLM):
             raise NotImplementedError
 
     def __call__(self, *args, **kwargs):
-        logger.debug("Invoking LlamaCpp ({args}) ({kwargs})", args=args, kwargs=kwargs)
-        output = self.llm(*args, **kwargs)
-        logger.debug(
-            "LlamaCpp generated text: {text} ({choices})",
-            text=output["choices"][0]["text"],
-            choices=[
-                (choice["text"], choice["logprobs"]) for choice in output["choices"]
-            ],
-        )
+        logger.debug("Invoking LlamaCpp ({args}) ({kwargs})", args, kwargs)
 
-        for choice in output.get("choices", []):
-            logprobs = choice.get("logprobs")
+        llm_out = self.llm(*args, **kwargs)
+        if isinstance(llm_out, dict):
+            llm_out = [llm_out]
+        
+        for output in llm_out:
+            logger.debug(
+                "LlamaCpp generated text: {text} ({choices})",
+                text=output["choices"][0]["text"],
+                choices=[
+                    (choice["text"], choice["logprobs"]) for choice in output["choices"]
+                ],
+            )
 
-            if not logprobs:
-                continue
+            for choice in output.get("choices", []):
+                logprobs = choice.get("logprobs")
 
-            new_top_logprobs = []
-            for index, top_logprobs in enumerate(logprobs["top_logprobs"]):
-                if top_logprobs is None:
-                    top_logprobs = {choice["logprobs"]["tokens"][index]: -0.1}
+                if not logprobs:
+                    continue
 
-                new_top_logprobs.append(top_logprobs)
-            logprobs["top_logprobs"] = new_top_logprobs
+                new_top_logprobs = []
+                for index, top_logprobs in enumerate(logprobs["top_logprobs"]):
+                    if top_logprobs is None:
+                        top_logprobs = {choice["logprobs"]["tokens"][index]: -0.1}
 
-        return output
+                    new_top_logprobs.append(top_logprobs)
+                logprobs["top_logprobs"] = new_top_logprobs
+
+            yield output
 
     def token_to_id(self, text):
         ids = self.encode(text, add_bos=False)
 
         return ids[-1]
-
     def role_start(self, role_name, **kwargs):
         assert self.chat_mode, "role_start() can only be used in chat mode"
         return (
             self.role_start_tag
-            + role_name
+            + self.role_to_name.get(role_name, role_name)
             + "".join([f' {k}="{v}"' for k, v in kwargs.items()])
             + "\n"
         )
