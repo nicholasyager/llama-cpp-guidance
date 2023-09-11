@@ -1,7 +1,12 @@
-from pathlib import Path
-import guidance
-from llama_cpp_guidance.llm import LlamaCpp
 import random
+from pathlib import Path
+
+import guidance
+from loguru import logger
+
+from llama_cpp_guidance.llm import LlamaCpp
+
+logger.enable("llama_cpp_guidance")
 
 # set the default language model used to execute guidance programs
 guidance.llm = LlamaCpp(
@@ -34,6 +39,7 @@ name_output = name_program(
     description="A quick and nimble fighter.",
 )
 
+
 # define the prompt
 program = guidance(
     """The following is a character profile for an RPG game in JSON format.
@@ -41,14 +47,14 @@ program = guidance(
 {
     "description": "{{description}}",
     "name": "{{ name }}",
-    "age": {{gen 'age' pattern='[0-9]+' stop=','}},
+    "age": {{gen 'age' pattern='[0-9]+' stop=',' temperature=1}},
     "armor": "{{select 'armor' logprobs='logprobs' options=valid_armor}}",
     "weapon": "{{select 'weapon' options=valid_weapons}}",
     "class": "{{gen 'class' stop='"'}}",
     "mantra": "{{gen 'mantra' temperature=0.8 stop='"'}}",
     "strength": {{gen 'strength' pattern='[0-9]+' stop=','}},
     "items": [{{#geneach 'character_items' num_iterations=3}}
-        "{{gen 'this' stop='"'}}",{{/geneach}}
+        "{{gen 'this' stop='"' temperature=0.95}}",{{/geneach}}
     ]
 }```""",
     logging=True,
@@ -62,4 +68,3 @@ output = program(
     name=name_output["first_name"] + " " + name_output["last_name"],
 )
 print(output)
-print(output.variables())
