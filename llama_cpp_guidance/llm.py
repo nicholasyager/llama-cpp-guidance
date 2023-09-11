@@ -1,11 +1,10 @@
 import os
 from pathlib import Path
+from typing import Any, Dict, Iterator, List, Literal, Optional, Union
 
-from typing import Dict, List, Literal, Optional, Union, Any
-from guidance.llms import LLM, LLMSession
-
-from llama_cpp import Llama, StoppingCriteriaList
 import llama_cpp
+from guidance.llms import LLM, LLMSession
+from llama_cpp import Completion, Llama, StoppingCriteriaList
 from loguru import logger
 
 logger.disable("llama_cpp_guidance")
@@ -17,7 +16,7 @@ class LlamaCppTokenizer:
         self.cache = {}
 
     def encode(self, string: str, **kwargs) -> List[int]:
-        logger.debug("Encoding string: {string}", string=string)
+        logger.trace("Encoding string: {string}", string=string)
         if string in self.cache:
             logger.debug(
                 "Cache hit `{string}` => `{token}`",
@@ -33,7 +32,7 @@ class LlamaCppTokenizer:
         return tokens
 
     def decode(self, tokens, **kwargs) -> str:
-        logger.debug("Decoding tokens: {tokens}", tokens=tokens)
+        logger.trace("Decoding tokens: {tokens}", tokens=tokens)
         return self.llm.detokenize(tokens, **kwargs).decode("utf-8")
 
 
@@ -51,7 +50,7 @@ class LlamaCpp(LLM):
         chat_mode=False,
         seed: int = 0,
         role_to_name: Dict[str, str] = {},
-        **llama_kwargs: Dict[str, Any]
+        **llama_kwargs: Dict[str, Any],
     ):
         super().__init__()
         self.llm_name = "llama-cpp"
@@ -72,7 +71,7 @@ class LlamaCpp(LLM):
             logits_all=True,
             verbose=False,
             seed=seed,
-            **llama_kwargs
+            **llama_kwargs,
         )
         logger.debug("Llama instantiated")
         self._tokenizer = LlamaCppTokenizer(self.llm)
@@ -85,42 +84,57 @@ class LlamaCpp(LLM):
         else:
             raise NotImplementedError
 
-    def __call__(self, *args, **kwargs):
-        logger.debug("Invoking LlamaCpp ({args}) ({kwargs})", args, kwargs)
+    def _call_llm(self, *args, **kwargs) -> Completion:
+        """Internal call of the Llama LLM model."""
+        logger.debug("Invoking LlamaCpp ({args}) ({kwargs})", args=args, kwargs=kwargs)
 
         llm_out = self.llm(*args, **kwargs)
-        if isinstance(llm_out, dict):
-            llm_out = [llm_out]
-        
-        for output in llm_out:
-            logger.debug(
-                "LlamaCpp generated text: {text} ({choices})",
-                text=output["choices"][0]["text"],
-                choices=[
-                    (choice["text"], choice["logprobs"]) for choice in output["choices"]
-                ],
-            )
 
-            for choice in output.get("choices", []):
-                logprobs = choice.get("logprobs")
+        logger.debug(
+            "LlamaCpp response: {output} ({type})", output=llm_out, type=type(llm_out)
+        )
 
-                if not logprobs:
-                    continue
+        if not isinstance(llm_out, Iterator):
+            return llm_out
 
-                new_top_logprobs = []
-                for index, top_logprobs in enumerate(logprobs["top_logprobs"]):
-                    if top_logprobs is None:
-                        top_logprobs = {choice["logprobs"]["tokens"][index]: -0.1}
+        logger.debug("Iterator detected! {content}", content=llm_out)
+        completion_chunks = list(llm_out)
 
-                    new_top_logprobs.append(top_logprobs)
-                logprobs["top_logprobs"] = new_top_logprobs
+        completion = completion_chunks[0]
 
-            yield output
+        for chunk in completion_chunks[1:-1]:
+            for index, choice in enumerate(chunk.get("choices", [])):
+                completion["choices"][index]["text"] += choice["text"]
+                completion["choices"][index]["finish_reason"] = choice["finish_reason"]
+
+        logger.debug("Merged completion chunks. {completion}", completion=completion)
+
+        return completion
+
+    def __call__(self, *args, **kwargs) -> Completion:
+        output: Completion = self._call_llm(*args, **kwargs)
+
+        for choice in output.get("choices", []):
+            logprobs = choice.get("logprobs")
+
+            if not logprobs:
+                continue
+
+            new_top_logprobs = []
+            for index, top_logprobs in enumerate(logprobs["top_logprobs"]):
+                if top_logprobs is None:
+                    top_logprobs = {choice["logprobs"]["tokens"][index]: -0.01}
+
+                new_top_logprobs.append(top_logprobs)
+            logprobs["top_logprobs"] = new_top_logprobs
+
+        return output
 
     def token_to_id(self, text):
         ids = self.encode(text, add_bos=False)
 
         return ids[-1]
+
     def role_start(self, role_name, **kwargs):
         assert self.chat_mode, "role_start() can only be used in chat mode"
         return (
