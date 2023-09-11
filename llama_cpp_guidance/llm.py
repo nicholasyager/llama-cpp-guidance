@@ -86,7 +86,7 @@ class LlamaCpp(LLM):
             raise NotImplementedError
 
     def __call__(self, *args, **kwargs):
-        print("Invoking LlamaCpp ({args}) ({kwargs})", args, kwargs)
+        logger.debug("Invoking LlamaCpp ({args}) ({kwargs})", args, kwargs)
 
         llm_out = self.llm(*args, **kwargs)
         if isinstance(llm_out, dict):
